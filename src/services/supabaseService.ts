@@ -292,5 +292,72 @@ export const supabaseService = {
       .from('audit_logs')
       .insert([{ admin_id: adminId, action, details }]);
     if (error) throw error;
+  },
+
+  // Tickets
+  async getTickets(userId: string) {
+    const { data, error } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async getAllTickets() {
+    const { data, error } = await supabase
+      .from('tickets')
+      .select(`
+        *,
+        profiles (username)
+      `)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data.map(t => ({ ...t, username: t.profiles?.username }));
+  },
+
+  async createTicket(ticket: any) {
+    const { data, error } = await supabase
+      .from('tickets')
+      .insert([ticket])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateTicketStatus(id: number, status: string) {
+    const { data, error } = await supabase
+      .from('tickets')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async addTicketMessage(message: any) {
+    const { data, error } = await supabase
+      .from('ticket_messages')
+      .insert([message])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async getTicketMessages(ticketId: number) {
+    const { data, error } = await supabase
+      .from('ticket_messages')
+      .select(`
+        *,
+        profiles (username)
+      `)
+      .eq('ticket_id', ticketId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data.map(m => ({ ...m, username: m.profiles?.username }));
   }
 };

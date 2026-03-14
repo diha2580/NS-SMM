@@ -39,18 +39,19 @@ import {
   Send,
   Video,
   Globe,
-  Share2
+  Share2,
+  MessageSquare
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { cn } from './lib/utils';
 
 import { AdminDashboard } from './Admin';
+import { Tickets } from './Tickets';
 import { supabaseService } from './services/supabaseService';
 import { supabase } from './lib/supabase';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+
 
 const getPlatformIcon = (text: string, size = 18) => {
   const t = text.toLowerCase();
@@ -406,6 +407,7 @@ function Sidebar({ isOpen, setIsOpen, isAdmin }: { isOpen: boolean, setIsOpen: (
     { name: 'Services', path: '/services', icon: List },
     { name: 'Orders', path: '/orders', icon: LayoutDashboard },
     { name: 'Add Funds', path: '/add-funds', icon: Wallet },
+    { name: 'Tickets', path: '/tickets', icon: MessageSquare },
   ];
 
   if (isAdmin) {
@@ -1863,6 +1865,7 @@ export default function App() {
                     <Route path="/services" element={<Services />} />
                     <Route path="/orders" element={<Orders user={user} />} />
                     <Route path="/add-funds" element={<AddFunds user={user} fetchUser={fetchUser} />} />
+                    <Route path="/tickets" element={<Tickets user={user} />} />
                     {isAdmin && <Route path="/admin" element={<AdminDashboard user={user} onLogout={() => setIsAdmin(false)} />} />}
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>

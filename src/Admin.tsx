@@ -23,10 +23,12 @@ import {
   Music,
   Send,
   Video,
-  Globe
+  Globe,
+  MessageSquare
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { supabase } from './lib/supabase';
 import { supabaseService } from './services/supabaseService';
 
 function cn(...inputs: ClassValue[]) {
@@ -49,10 +51,11 @@ export const getPlatformIcon = (text: string, size = 18) => {
 
 
 export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<'services' | 'orders' | 'funds'>('orders');
+  const [activeTab, setActiveTab] = useState<'services' | 'orders' | 'funds' | 'tickets'>('orders');
   const [services, setServices] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [fundRequests, setFundRequests] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingService, setEditingService] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,8 +92,36 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
     }
   };
 
+  const fetchTickets = async () => {
+    try {
+      const data = await supabaseService.getAllTickets();
+      setTickets(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([fetchServices(), fetchOrders(), fetchFundRequests()]).finally(() => setLoading(false));
+    Promise.all([fetchServices(), fetchOrders(), fetchFundRequests(), fetchTickets()]).finally(() => setLoading(false));
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+        },
+        () => {
+          fetchOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleStatusChange = async (orderId: number, newStatus: string) => {
@@ -276,6 +307,11 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                 )}
               >
                 <LayoutDashboard size={16} /> Orders
+                {orders.filter(o => o.status === 'Pending').length > 0 && (
+                  <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {orders.filter(o => o.status === 'Pending').length}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('services')}
@@ -285,6 +321,11 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                 )}
               >
                 <List size={16} /> Services
+                {services.length > 0 && (
+                  <span className="bg-slate-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {services.length}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('funds')}
@@ -299,6 +340,15 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                     {fundRequests.filter(r => r.status === 'Pending').length}
                   </span>
                 )}
+              </button>
+              <button
+                onClick={() => setActiveTab('tickets')}
+                className={cn(
+                  "px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2",
+                  activeTab === 'tickets' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <MessageSquare size={16} /> Tickets
               </button>
             </div>
             {activeTab === 'services' && (
@@ -616,6 +666,49 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                     <tr>
                       <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
                         No fund requests found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'tickets' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                    <th className="px-6 py-4 font-medium">ID</th>
+                    <th className="px-6 py-4 font-medium">User</th>
+                    <th className="px-6 py-4 font-medium">Subject</th>
+                    <th className="px-6 py-4 font-medium">Status</th>
+                    <th className="px-6 py-4 font-medium">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {tickets.map(ticket => (
+                    <tr key={ticket.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-slate-500">{ticket.id}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900">{ticket.username}</td>
+                      <td className="px-6 py-4 text-sm text-slate-900">{ticket.subject}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={cn(
+                          "px-2.5 py-1 rounded-full text-xs font-semibold border",
+                          ticket.status === 'Pending' ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        )}>
+                          {ticket.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500">{new Date(ticket.created_at).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  {tickets.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                        No tickets found.
                       </td>
                     </tr>
                   )}
