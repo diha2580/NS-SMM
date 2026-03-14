@@ -24,12 +24,14 @@ import {
   Send,
   Video,
   Globe,
-  MessageSquare
+  MessageSquare,
+  Bot
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { supabase } from './lib/supabase';
 import { supabaseService } from './services/supabaseService';
+import { AIChatBot } from './components/AIChatBot';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -51,7 +53,7 @@ export const getPlatformIcon = (text: string, size = 18) => {
 
 
 export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<'services' | 'orders' | 'funds' | 'tickets'>('orders');
+  const [activeTab, setActiveTab] = useState<'services' | 'orders' | 'funds' | 'tickets' | 'chat'>('orders');
   const [services, setServices] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [fundRequests, setFundRequests] = useState<any[]>([]);
@@ -349,6 +351,15 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                 )}
               >
                 <MessageSquare size={16} /> Tickets
+              </button>
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={cn(
+                  "px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2",
+                  activeTab === 'chat' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <Bot size={16} /> AI Assistant
               </button>
             </div>
             {activeTab === 'services' && (
@@ -715,6 +726,12 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'chat' && (
+          <div className="max-w-2xl mx-auto">
+            <AIChatBot />
           </div>
         )}
       </div>

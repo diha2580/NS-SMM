@@ -40,7 +40,8 @@ import {
   Video,
   Globe,
   Share2,
-  MessageSquare
+  MessageSquare,
+  Bot
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -48,6 +49,7 @@ import { cn } from './lib/utils';
 
 import { AdminDashboard } from './Admin';
 import { Tickets } from './Tickets';
+import { AIChatBot } from './components/AIChatBot';
 import { supabaseService } from './services/supabaseService';
 import { supabase } from './lib/supabase';
 
@@ -1870,6 +1872,7 @@ export default function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
+                <AIChatBot />
               </div>
             </div>
           )
