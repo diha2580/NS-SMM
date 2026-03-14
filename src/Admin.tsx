@@ -60,6 +60,7 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
   const [formError, setFormError] = useState('');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
+  const [selectedFundRequests, setSelectedFundRequests] = useState<number[]>([]);
 
   const fetchServices = async () => {
     try {
@@ -113,6 +114,19 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
     } catch (err) {
       console.error(err);
       alert('Failed to update statuses');
+    }
+  };
+
+  const handleBulkFundRequestStatus = async (status: string) => {
+    if (selectedFundRequests.length === 0) return;
+    try {
+      await Promise.all(selectedFundRequests.map(id => supabaseService.updateFundRequestStatus(id, status)));
+      await supabaseService.logAction(user.id, 'Bulk Update Fund Request Status', `Request IDs: ${selectedFundRequests.join(', ')}, New Status: ${status}`);
+      fetchFundRequests();
+      setSelectedFundRequests([]);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update fund request statuses');
     }
   };
 
@@ -480,10 +494,37 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
 
         {activeTab === 'funds' && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            {selectedFundRequests.length > 0 && (
+              <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between gap-4">
+                <span className="text-sm font-medium text-slate-600">
+                  {selectedFundRequests.length} selected
+                </span>
+                <button
+                  onClick={() => handleBulkFundRequestStatus('Approved')}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
+                >
+                  Approve Selected
+                </button>
+              </div>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                    <th className="px-6 py-4 font-medium w-10">
+                      <input
+                        type="checkbox"
+                        checked={fundRequests.filter(r => r.status === 'Pending').length > 0 && selectedFundRequests.length === fundRequests.filter(r => r.status === 'Pending').length}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedFundRequests(fundRequests.filter(r => r.status === 'Pending').map(r => r.id));
+                          } else {
+                            setSelectedFundRequests([]);
+                          }
+                        }}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4"
+                      />
+                    </th>
                     <th className="px-6 py-4 font-medium">ID</th>
                     <th className="px-6 py-4 font-medium">User</th>
                     <th className="px-6 py-4 font-medium">Amount</th>
@@ -498,9 +539,24 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                       key={request.id} 
                       className={cn(
                         "hover:bg-slate-50 transition-colors",
-                        request.status === 'Pending' && "bg-amber-50/40"
+                        request.status === 'Pending' && "bg-amber-50/40",
+                        selectedFundRequests.includes(request.id) && "bg-indigo-50/50"
                       )}
                     >
+                      <td className="px-6 py-4">
+                        {request.status === 'Pending' && (
+                          <input
+                            type="checkbox"
+                            checked={selectedFundRequests.includes(request.id)}
+                            onChange={() => {
+                              setSelectedFundRequests(prev => 
+                                prev.includes(request.id) ? prev.filter(id => id !== request.id) : [...prev, request.id]
+                              );
+                            }}
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4"
+                          />
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-sm text-slate-500">{request.id}</td>
                       <td className="px-6 py-4 text-sm font-medium text-slate-900">{request.username}</td>
                       <td className="px-6 py-4 text-sm font-medium text-emerald-600">${request.amount.toFixed(2)}</td>
@@ -558,7 +614,7 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                   ))}
                   {fundRequests.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                      <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
                         No fund requests found.
                       </td>
                     </tr>
