@@ -1,0 +1,5 @@
+{
+  "name": "MotherPanel Clone",
+  "description": "A full-stack SMM panel with services, order tracking, and simulated wallet system.",
+  "requestFramePermissions": []
+}
