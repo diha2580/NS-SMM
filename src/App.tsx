@@ -173,7 +173,7 @@ function LandingPage({ onLogin }: { onLogin: (token: string, username: string) =
               <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/>
               <path d="M12 10l-3 6h6l-3-6z"/>
             </svg>
-            MotherPanel
+            NS SMM
           </div>
         </div>
         
@@ -200,7 +200,7 @@ function LandingPage({ onLogin }: { onLogin: (token: string, username: string) =
         <div className="md:w-1/2 max-w-2xl text-center md:text-left mb-12 md:mb-0 z-10 md:pr-12">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold mb-6 border border-indigo-100">
             <span className="flex h-2 w-2 rounded-full bg-indigo-600 mr-2 animate-pulse"></span>
-            #1 SMM Provider Worldwide
+            #1 NS SMM Provider Worldwide
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-6 leading-[1.1] tracking-tight">
             Scale Your Social <br/>
@@ -209,7 +209,7 @@ function LandingPage({ onLogin }: { onLogin: (token: string, username: string) =
             </span>
           </h1>
           <p className="text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
-            The fastest, most reliable, and cheapest SMM panel for resellers, agencies, and influencers. High-quality services delivered in seconds.
+            The fastest, most reliable, and cheapest NS SMM panel for resellers, agencies, and influencers. High-quality services delivered in seconds.
           </p>
           
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
@@ -238,7 +238,7 @@ function LandingPage({ onLogin }: { onLogin: (token: string, username: string) =
                 {authMode === 'login' ? 'Welcome Back' : 'Create an Account'}
               </h2>
               <p className="text-slate-500 text-sm mt-2">
-                {authMode === 'login' ? 'Enter your credentials to access the panel' : 'Join the #1 SMM provider today'}
+                {authMode === 'login' ? 'Enter your credentials to access the panel' : 'Join the #1 NS SMM provider today'}
               </p>
             </div>
             
@@ -325,7 +325,7 @@ function LandingPage({ onLogin }: { onLogin: (token: string, username: string) =
               <div className="text-center mt-6 pt-6 border-t border-slate-100 flex flex-col gap-3">
                 <div>
                   <span className="text-sm text-slate-500">
-                    {authMode === 'login' ? 'New to MotherPanel? ' : 'Already have an account? '}
+                    {authMode === 'login' ? 'New to NS SMM? ' : 'Already have an account? '}
                   </span>
                   <button 
                     type="button"
@@ -354,7 +354,7 @@ function LandingPage({ onLogin }: { onLogin: (token: string, username: string) =
                 <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/>
                 <path d="M12 10l-3 6h6l-3-6z"/>
               </svg>
-              MotherPanel
+              NS SMM
             </div>
             <p className="text-sm leading-relaxed mb-4">The world's largest and cheapest Social Media Marketing Panel for resellers and direct buyers. High quality, instant delivery.</p>
           </div>
@@ -384,7 +384,7 @@ function LandingPage({ onLogin }: { onLogin: (token: string, username: string) =
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-800 text-sm flex flex-col md:flex-row justify-between items-center">
-          <p>&copy; {new Date().getFullYear()} MotherPanel. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} NS SMM. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-white transition-colors">Twitter</a>
             <a href="#" className="hover:text-white transition-colors">Telegram</a>
@@ -433,7 +433,7 @@ function Sidebar({ isOpen, setIsOpen, isAdmin }: { isOpen: boolean, setIsOpen: (
               <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/>
               <path d="M12 10l-3 6h6l-3-6z"/>
             </svg>
-            MotherPanel
+            NS SMM
           </div>
           <button onClick={() => setIsOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
             <X size={24} />
@@ -1863,7 +1863,7 @@ export default function App() {
                     <Route path="/services" element={<Services />} />
                     <Route path="/orders" element={<Orders user={user} />} />
                     <Route path="/add-funds" element={<AddFunds user={user} fetchUser={fetchUser} />} />
-                    {isAdmin && <Route path="/admin" element={<AdminDashboard onLogout={() => setIsAdmin(false)} />} />}
+                    {isAdmin && <Route path="/admin" element={<AdminDashboard user={user} onLogout={() => setIsAdmin(false)} />} />}
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>

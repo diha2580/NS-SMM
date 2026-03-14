@@ -285,5 +285,12 @@ export const supabaseService = {
     
     if (error) throw error;
     return data;
+  },
+
+  async logAction(adminId: string, action: string, details: string) {
+    const { error } = await supabase
+      .from('audit_logs')
+      .insert([{ admin_id: adminId, action, details }]);
+    if (error) throw error;
   }
 };

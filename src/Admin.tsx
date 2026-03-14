@@ -48,7 +48,7 @@ export const getPlatformIcon = (text: string, size = 18) => {
 };
 
 
-export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
+export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState<'services' | 'orders' | 'funds'>('orders');
   const [services, setServices] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -95,6 +95,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     try {
       await supabaseService.updateOrderStatus(orderId, newStatus);
+      await supabaseService.logAction(user.id, 'Update Order Status', `Order ID: ${orderId}, New Status: ${newStatus}`);
       fetchOrders(); // Refresh orders
     } catch (err) {
       console.error(err);
@@ -106,6 +107,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     if (selectedOrders.length === 0) return;
     try {
       await supabaseService.bulkUpdateOrderStatus(selectedOrders, newStatus);
+      await supabaseService.logAction(user.id, 'Bulk Update Order Status', `Order IDs: ${selectedOrders.join(', ')}, New Status: ${newStatus}`);
       fetchOrders();
       setSelectedOrders([]);
     } catch (err) {
@@ -122,6 +124,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     setProcessingId(id);
     try {
       await supabaseService.updateFundRequestStatus(id, status);
+      await supabaseService.logAction(user.id, 'Update Fund Request Status', `Request ID: ${id}, New Status: ${status}`);
       await fetchFundRequests();
     } catch (err: any) {
       console.error(err);
