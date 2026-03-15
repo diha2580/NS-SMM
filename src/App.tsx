@@ -50,6 +50,8 @@ import { cn } from './lib/utils';
 import { AdminDashboard } from './Admin';
 import { Tickets } from './Tickets';
 import { AIChatBot } from './components/AIChatBot';
+import { CurrencySwitcher } from './components/CurrencySwitcher';
+import { useCurrency } from './components/CurrencyContext';
 import { supabaseService } from './services/supabaseService';
 import { supabase } from './lib/supabase';
 
@@ -475,6 +477,7 @@ function Header({ setIsOpen, user, onLogout }: { setIsOpen: (v: boolean) => void
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [animateBalance, setAnimateBalance] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { currency, convert } = useCurrency();
 
   useEffect(() => {
     if (user?.balance !== undefined) {
@@ -507,6 +510,7 @@ function Header({ setIsOpen, user, onLogout }: { setIsOpen: (v: boolean) => void
       </div>
       
       <div className="flex items-center space-x-3 sm:space-x-4">
+        <CurrencySwitcher />
         <Link 
           to="/"
           className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-5 py-2.5 rounded-2xl font-semibold transition-colors shadow-sm"
@@ -532,7 +536,8 @@ function Header({ setIsOpen, user, onLogout }: { setIsOpen: (v: boolean) => void
             "text-base sm:text-lg font-extrabold tracking-tight transition-colors duration-300",
             animateBalance ? "text-emerald-950" : "text-emerald-900"
           )}>
-            ${user?.balance?.toFixed(2) || '0.00'}
+            {currency === 'USD' ? '$' : currency === 'BDT' ? '৳' : currency === 'EURO' ? '€' : '₹'}
+            {convert(user?.balance || 0).toFixed(2)}
           </span>
         </div>
         

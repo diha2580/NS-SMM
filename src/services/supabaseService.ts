@@ -359,5 +359,26 @@ export const supabaseService = {
       .order('created_at', { ascending: true });
     if (error) throw error;
     return data.map(m => ({ ...m, username: m.profiles?.username }));
+  },
+
+  // Users
+  async getUsers() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('username', { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+
+  async updateUserRole(userId: string, role: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', userId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   }
 };

@@ -53,11 +53,12 @@ export const getPlatformIcon = (text: string, size = 18) => {
 
 
 export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<'services' | 'orders' | 'funds' | 'tickets' | 'chat'>('orders');
+  const [activeTab, setActiveTab] = useState<'services' | 'orders' | 'funds' | 'tickets' | 'chat' | 'users'>('orders');
   const [services, setServices] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [fundRequests, setFundRequests] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingService, setEditingService] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,8 +104,17 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const data = await supabaseService.getUsers();
+      setUsers(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([fetchServices(), fetchOrders(), fetchFundRequests(), fetchTickets()]).finally(() => setLoading(false));
+    Promise.all([fetchServices(), fetchOrders(), fetchFundRequests(), fetchTickets(), fetchUsers()]).finally(() => setLoading(false));
 
     const channel = supabase
       .channel('schema-db-changes')
@@ -405,6 +415,15 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                 )}
               >
                 <Bot size={16} /> AI Assistant
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className={cn(
+                  "px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2",
+                  activeTab === 'users' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <ShieldAlert size={16} /> Users
               </button>
             </div>
             {activeTab === 'services' && (
@@ -728,6 +747,44 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="px-6 py-4 font-medium">Username</th>
+                  <th className="px-6 py-4 font-medium">Email</th>
+                  <th className="px-6 py-4 font-medium">Role</th>
+                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {users.map(u => (
+                  <tr key={u.id}>
+                    <td className="px-6 py-4 text-sm text-slate-900">{u.username}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500">{u.email}</td>
+                    <td className="px-6 py-4 text-sm text-slate-900">{u.role || 'user'}</td>
+                    <td className="px-6 py-4 text-sm text-right">
+                      <button
+                        onClick={async () => {
+                          const newRole = u.role === 'admin' ? 'user' : 'admin';
+                          if (confirm(`Are you sure you want to change ${u.username}'s role to ${newRole}?`)) {
+                            await supabaseService.updateUserRole(u.id, newRole);
+                            fetchUsers();
+                          }
+                        }}
+                        className="text-indigo-600 hover:text-indigo-800 font-medium"
+                      >
+                        Make {u.role === 'admin' ? 'User' : 'Admin'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
