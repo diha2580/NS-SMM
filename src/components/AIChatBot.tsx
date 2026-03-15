@@ -47,7 +47,7 @@ export function AIChatBot() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div className="fixed bottom-6 right-6 z-50">
       {isOpen ? (
         <div className="w-80 h-[500px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
           <div className="p-4 border-b border-slate-200 font-semibold text-slate-900 flex items-center justify-between">

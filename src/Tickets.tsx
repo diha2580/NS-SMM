@@ -5,14 +5,25 @@ import { cn } from './lib/utils';
 
 export function Tickets({ user }: { user: any }) {
   const [tickets, setTickets] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [orderId, setOrderId] = useState('');
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [ticketMessages, setTicketMessages] = useState<any[]>([]);
 
   useEffect(() => {
     fetchTickets();
+    fetchOrders();
   }, []);
+
+  useEffect(() => {
+    if (selectedTicket) {
+      fetchTicketMessages(selectedTicket.id);
+    }
+  }, [selectedTicket]);
 
   const fetchTickets = async () => {
     try {
@@ -25,19 +36,55 @@ export function Tickets({ user }: { user: any }) {
     }
   };
 
+  const fetchTicketMessages = async (ticketId: number) => {
+    try {
+      const data = await supabaseService.getTicketMessages(ticketId);
+      setTicketMessages(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const data = await supabaseService.getOrders(user.id);
+      setOrders(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateStatus = async (status: string) => {
+    try {
+      await supabaseService.updateTicketStatus(selectedTicket.id, status);
+      setSelectedTicket({ ...selectedTicket, status });
+      fetchTickets();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status');
+    }
+  };
+
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await supabaseService.createTicket({
+      const ticket = await supabaseService.createTicket({
         user_id: user.id,
         subject,
-        status: 'Pending'
+        status: 'Pending',
+        order_id: orderId || null
       });
-      // Need to add the first message too
-      // For now, let's keep it simple
+      
+      await supabaseService.addTicketMessage({
+        ticket_id: ticket.id,
+        user_id: user.id,
+        message
+      });
+
       setIsCreating(false);
       setSubject('');
       setMessage('');
+      setOrderId('');
       fetchTickets();
     } catch (err) {
       console.error(err);
@@ -61,7 +108,7 @@ export function Tickets({ user }: { user: any }) {
         </button>
       </div>
 
-      {isCreating && (
+      {isCreating ? (
         <form onSubmit={handleCreateTicket} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Create New Ticket</h2>
           <input
@@ -72,11 +119,23 @@ export function Tickets({ user }: { user: any }) {
             className="w-full rounded-xl border border-slate-200 px-4 py-2.5 mb-4"
             required
           />
+          <select
+            value={orderId}
+            onChange={e => setOrderId(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 px-4 py-2.5 mb-4"
+          >
+            <option value="">Select an order (optional)</option>
+            {orders.map(order => (
+              <option key={order.id} value={order.id}>
+                Order #{order.id} - {order.service_name}
+              </option>
+            ))}
+          </select>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
             placeholder="Message"
-            className="w-full rounded-xl border border-slate-200 px-4 py-2.5 mb-4 min-h-[100px]"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2.5 mb-4 min-h-[150px]"
             required
           />
           <div className="flex justify-end gap-2">
@@ -84,7 +143,30 @@ export function Tickets({ user }: { user: any }) {
             <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Create</button>
           </div>
         </form>
-      )}
+      ) : selectedTicket ? (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900">{selectedTicket.subject}</h2>
+            <div className="flex gap-2">
+              {selectedTicket.status === 'Pending' && (
+                <>
+                  <button onClick={() => handleUpdateStatus('Resolved')} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm">Mark Resolved</button>
+                  <button onClick={() => handleUpdateStatus('Closed')} className="px-3 py-1.5 bg-slate-600 text-white rounded-lg text-sm">Close</button>
+                </>
+              )}
+              <button onClick={() => setSelectedTicket(null)} className="px-3 py-1.5 text-slate-600">Back</button>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {ticketMessages.map((m: any) => (
+              <div key={m.id} className="p-4 bg-slate-50 rounded-xl">
+                <p className="text-sm font-semibold text-slate-900">{m.username || 'Admin'}</p>
+                <p className="text-sm text-slate-700">{m.message}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <table className="w-full text-left border-collapse">
@@ -97,7 +179,7 @@ export function Tickets({ user }: { user: any }) {
           </thead>
           <tbody className="divide-y divide-slate-200">
             {tickets.map(t => (
-              <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+              <tr key={t.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setSelectedTicket(t)}>
                 <td className="px-6 py-4 text-sm font-medium text-slate-900">{t.subject}</td>
                 <td className="px-6 py-4 text-sm">
                   <span className={cn(
