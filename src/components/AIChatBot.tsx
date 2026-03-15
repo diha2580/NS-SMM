@@ -3,8 +3,6 @@ import { GoogleGenAI } from '@google/genai';
 import { Send, Bot, User, Loader2, X, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-
 export function AIChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([
@@ -29,6 +27,7 @@ export function AIChatBot() {
     setLoading(true);
 
     try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: userMessage,
@@ -40,7 +39,7 @@ export function AIChatBot() {
       setMessages(prev => [...prev, { role: 'model', text: response.text || 'Sorry, I could not generate a response.' }]);
     } catch (error) {
       console.error('AI Chat Error:', error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Sorry, an error occurred.' }]);
+      setMessages(prev => [...prev, { role: 'model', text: `Sorry, an error occurred: ${error instanceof Error ? error.message : String(error)}` }]);
     } finally {
       setLoading(false);
     }
