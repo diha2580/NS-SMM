@@ -129,6 +129,28 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
           fetchOrders();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'fund_requests',
+        },
+        () => {
+          fetchFundRequests();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tickets',
+        },
+        () => {
+          fetchTickets();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -1057,6 +1079,17 @@ export function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => 
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</p>
                 <p className="text-2xl font-bold text-emerald-600">${selectedRequest.amount.toFixed(2)}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Method</p>
+                  <p className="text-slate-900 font-medium capitalize">{selectedRequest.method || 'N/A'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction ID</p>
+                  <p className="text-slate-900 font-mono text-sm bg-slate-50 px-2 py-1 rounded border border-slate-100">{selectedRequest.trx_id || 'N/A'}</p>
+                </div>
               </div>
 
               <div className="space-y-1">
